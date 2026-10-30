@@ -31,7 +31,7 @@ MANIFEST
 
 # Media & Generated Analysis Artifacts
 output/
-output_test/
+output_*/
 runs/
 frames/
 *.mp4
@@ -41,6 +41,7 @@ frames/
 embed.html
 video_url.txt
 reel_info.json
+yt_meta.json
 metadata_extracted.json
 *.log
 

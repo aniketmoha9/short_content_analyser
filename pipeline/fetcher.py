@@ -21,7 +21,102 @@ def get_ffmpeg_path() -> str:
     except ImportError:
         return "ffmpeg"
 
+def is_youtube_url(url: str) -> bool:
+    return "youtube.com" in url or "youtu.be" in url
+
+def fetch_youtube(url: str, output_dir: str = "output", frame_interval_seconds: int = 5) -> Dict[str, Any]:
+    os.makedirs(output_dir, exist_ok=True)
+    frames_dir = os.path.join(output_dir, "frames")
+    os.makedirs(frames_dir, exist_ok=True)
+    
+    print(f"[*] Extracting YouTube Short metadata & video from: {url}")
+    import yt_dlp
+    
+    ffmpeg_bin = get_ffmpeg_path()
+    video_path = os.path.join(output_dir, "reel.mp4")
+    
+    ydl_opts = {
+        'format': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best',
+        'outtmpl': os.path.join(output_dir, 'temp_video.%(ext)s'),
+        'merge_output_format': 'mp4',
+        'ffmpeg_location': ffmpeg_bin,
+        'quiet': True,
+        'no_warnings': True,
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        
+    temp_downloaded = ydl.prepare_filename(info)
+    # Ensure merged file ends up as reel.mp4
+    actual_merged = os.path.splitext(temp_downloaded)[0] + ".mp4"
+    if os.path.exists(actual_merged) and actual_merged != video_path:
+        os.replace(actual_merged, video_path)
+    elif os.path.exists(temp_downloaded) and temp_downloaded != video_path:
+        os.replace(temp_downloaded, video_path)
+
+    metadata = {
+        "url": url,
+        "platform": "YouTube",
+        "title": info.get("title"),
+        "username": info.get("uploader") or info.get("channel"),
+        "followers": info.get("channel_follower_count"),
+        "caption": info.get("title") or info.get("description"),
+        "description": info.get("description"),
+        "video_duration_seconds": float(info.get("duration", 0)),
+        "comment_count": info.get("comment_count"),
+        "like_count": info.get("like_count"),
+        "view_count": info.get("view_count"),
+        "video_url": url
+    }
+    
+    meta_path = os.path.join(output_dir, "metadata.json")
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+    print(f"[✓] Metadata saved: creator=@{metadata['username']}, duration={metadata['video_duration_seconds']}s")
+
+    speech_wav = os.path.join(output_dir, "speech.wav")
+    audio_mp3 = os.path.join(output_dir, "audio.mp3")
+    
+    # 1. Extract 16kHz mono WAV (ideal for ASR engines)
+    print(f"[*] Converting audio to 16kHz mono WAV ({speech_wav})...")
+    subprocess.run([
+        ffmpeg_bin, "-i", video_path,
+        "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le",
+        speech_wav, "-y"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    # 2. Extract MP3 (lightweight audio preview)
+    subprocess.run([
+        ffmpeg_bin, "-i", video_path,
+        "-vn", "-c:a", "mp3",
+        audio_mp3, "-y"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    # 3. Extract keyframe snapshots every N seconds
+    print(f"[*] Extracting keyframes every {frame_interval_seconds}s to {frames_dir}/...")
+    subprocess.run([
+        ffmpeg_bin, "-i", video_path,
+        "-vf", f"fps=1/{frame_interval_seconds}",
+        os.path.join(frames_dir, "frame_%03d.jpg"),
+        "-y"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    num_frames = len([f for f in os.listdir(frames_dir) if f.endswith(".jpg")])
+    print(f"[✓] Extracted {num_frames} keyframe snapshots.")
+    
+    metadata["video_path"] = video_path
+    metadata["speech_wav"] = speech_wav
+    metadata["audio_mp3"] = audio_mp3
+    metadata["frames_dir"] = frames_dir
+    metadata["frame_count"] = num_frames
+    
+    return metadata
+
 def fetch_reel(url: str, output_dir: str = "output", frame_interval_seconds: int = 5) -> Dict[str, Any]:
+    if is_youtube_url(url):
+        return fetch_youtube(url, output_dir=output_dir, frame_interval_seconds=frame_interval_seconds)
+
     os.makedirs(output_dir, exist_ok=True)
     frames_dir = os.path.join(output_dir, "frames")
     os.makedirs(frames_dir, exist_ok=True)

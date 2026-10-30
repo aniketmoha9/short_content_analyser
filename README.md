@@ -1,13 +1,14 @@
-# 📱 Open-Source Instagram Reel & Video Analyser
+# 📱 Open-Source Short Video Analyser (Instagram Reels & YouTube Shorts)
 
-A **100% local, privacy-first, open-source pipeline** to fetch, transcribe, and analyze Instagram Reels and videos using state-of-the-art open models on Apple Silicon.
+A **100% local, privacy-first, open-source pipeline** to fetch, transcribe, and analyze Instagram Reels and YouTube Shorts using state-of-the-art open models on Apple Silicon.
 
 ---
 
 ## 🌟 Key Features
 
-* **No Login Walls**: Bypasses Instagram's aggressive login blockers and rate limits via public embed payload decoding.
-* **Direct High-Resolution Video Download**: Extracts raw `.mp4` video files directly from Meta's Content Delivery Network (CDN).
+* **Multi-Platform Ingestion**: Supports Instagram Reels and YouTube Shorts (`/shorts/...`, `/watch?v=...`, `youtu.be`).
+* **No Login Walls**: Bypasses Instagram's aggressive login blockers and rate limits via public embed payload decoding. Direct YouTube extraction via yt-dlp.
+* **Direct High-Resolution Video Download**: Extracts raw `.mp4` video files directly from CDNs with automatic audio/video DASH stream merging.
 * **Multi-Modal Media Splitting (FFmpeg)**:
   * Generates clean 16kHz mono `speech.wav` optimized for ASR engines.
   * Extracts keyframe screenshots every $N$ seconds for visual analysis.
@@ -49,14 +50,19 @@ source .venv311/bin/activate
 
 ## 💻 CLI Usage
 
-### Basic Run (Fastest — Faster-Whisper + Local Nemotron)
+### Basic Run (Instagram Reel)
 ```bash
 python main.py "https://www.instagram.com/p/De9SJQIg9Kv/" --asr whisper
 ```
 
+### Basic Run (YouTube Short)
+```bash
+python main.py "https://www.youtube.com/shorts/ofWd75jo06g" --asr whisper
+```
+
 ### High-Fidelity Run (NVIDIA Nemotron ASR + Local Nemotron LLM)
 ```bash
-python main.py "https://www.instagram.com/p/De9SJQIg9Kv/" --asr nemotron
+python main.py "https://www.youtube.com/shorts/ofWd75jo06g" --asr nemotron
 ```
 
 ### Using Bonsai Reasoning Model
@@ -97,7 +103,7 @@ output/
 
 ```mermaid
 flowchart TD
-    URL["Instagram Reel URL"] --> F["pipeline/fetcher.py<br>(Embed Decoding + curl + FFmpeg)"]
+    URL["Instagram Reel or YouTube Short URL"] --> F["pipeline/fetcher.py<br>(Embed Decoding / yt-dlp + FFmpeg)"]
     
     subgraph MediaExtraction ["Extracted Modalities"]
         F --> MP4["reel.mp4"]

@@ -43,7 +43,11 @@ def generate_report(
     
     followers_str = f"{followers:,}" if isinstance(followers, int) else str(followers)
     
-    md_content = f"""# Instagram Video & Reel Intelligence Report
+    is_yt = "youtube" in url or "youtu.be" in url
+    creator_display = f"[@{username}](https://www.youtube.com/@{username})" if is_yt else f"[@{username}](https://www.instagram.com/{username}/)"
+    platform_name = "YouTube Short" if is_yt else "Instagram Reel"
+    
+    md_content = f"""# Short-Form Video Intelligence Report ({platform_name})
 
 Generated locally via 100% open-source models (**{asr_engine}** + **{llm_model}**).
 
@@ -53,8 +57,9 @@ Generated locally via 100% open-source models (**{asr_engine}** + **{llm_model}*
 
 | Metric / Attribute | Value |
 | :--- | :--- |
-| **Creator** | [@{username}](https://www.instagram.com/{username}/) |
-| **Followers** | {followers_str} |
+| **Platform** | {platform_name} |
+| **Creator** | {creator_display} |
+| **Followers / Subscribers** | {followers_str} |
 | **Duration** | {duration} seconds |
 | **Comments Count** | {comments} |
 | **Source URL** | [{url}]({url}) |
