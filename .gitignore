@@ -1,0 +1,59 @@
+# Environments
+.venv/
+.venv311/
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Media & Generated Analysis Artifacts
+output/
+output_test/
+runs/
+frames/
+*.mp4
+*.wav
+*.mp3
+*.m4a
+embed.html
+video_url.txt
+reel_info.json
+metadata_extracted.json
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

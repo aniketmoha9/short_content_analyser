@@ -1,0 +1,18 @@
+# Media & Audio Processing
+imageio-ffmpeg>=0.6.0
+av>=11.0.0
+
+# Local ASR (Speech Recognition)
+faster-whisper>=1.0.0
+ctranslate2>=4.0.0
+
+# Apple Silicon MLX Acceleration (for Nemotron 3.5 ASR on Metal)
+mlx>=0.29.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+mlx-metal>=0.29.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+mlx-audio @ git+https://github.com/Blaizzy/mlx-audio.git; sys_platform == 'darwin' and platform_machine == 'arm64'
+
+# Dependencies
+scipy>=1.10.0
+sentencepiece>=0.2.0
+huggingface-hub>=1.0.0
+tqdm>=4.67.0
