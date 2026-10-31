@@ -33,6 +33,9 @@ MANIFEST
 output/
 output_*/
 runs/
+/reports/
+docs/reports/*
+!docs/reports/sample_report.md
 frames/
 *.mp4
 *.wav
