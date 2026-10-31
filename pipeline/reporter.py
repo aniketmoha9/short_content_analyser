@@ -82,13 +82,13 @@ Generated locally via 100% open-source models (**{asr_engine}** + **{llm_model}*
 
 ---
 
-## 4. Technical Architecture Diagram Breakdown
+## 4. Key Visual & Demonstration Breakdown
 
 {diag_sec}
 
 ---
 
-## 5. Comprehensive Systems Synthesis & Critique
+## 5. Comprehensive Synthesis & Critique
 
 {synth_sec}
 

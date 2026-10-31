@@ -38,6 +38,10 @@ def analyze_content(
 ) -> Dict[str, Any]:
     print(f"[*] Running multimodal reasoning using local model '{model}'...")
     
+    caption = metadata.get("caption", "")
+    username = metadata.get("username", "creator")
+    title = metadata.get("title", caption)
+    
     # 1. Inspect first frame (Hook Analysis)
     first_frame = os.path.join(frames_dir, "frame_001.jpg")
     hook_analysis = ""
@@ -46,37 +50,37 @@ def analyze_content(
         with open(first_frame, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
         hook_prompt = (
-            "Analyze this opening video frame from a tech Instagram Reel. "
+            "Analyze this opening video frame from a short-form video (Reel / Short). "
             "1. Transcribe the on-screen text verbatim. "
-            "2. Identify the target audience, emotional trigger, and retention hook."
+            "2. Identify the target audience, emotional trigger, visual hierarchy, and the retention hook."
         )
         hook_analysis = query_ollama(hook_prompt, model=model, images_b64=[b64])
         
-    # 2. Inspect a key architecture diagram frame (e.g. around the 70% mark of the video)
+    # 2. Inspect a key visual frame (around the 65-70% mark of the video)
     all_frames = sorted(glob.glob(os.path.join(frames_dir, "frame_*.jpg")))
     diagram_analysis = ""
-    if len(all_frames) > 5:
-        # Select frame around 70% mark (e.g. frame 18 of 25)
-        target_idx = int(len(all_frames) * 0.7)
+    if len(all_frames) > 3:
+        target_idx = int(len(all_frames) * 0.65)
         diag_frame = all_frames[target_idx]
-        print(f"[*] Analyzing technical diagram from {os.path.basename(diag_frame)}...")
+        print(f"[*] Analyzing key content visual from {os.path.basename(diag_frame)}...")
         with open(diag_frame, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
         diag_prompt = (
-            "Explain the technical architecture diagram shown in this slide. "
-            "What distributed computing technique or system design is illustrated, "
-            "what problem does it solve, and how does it function?"
+            "Analyze the visual content in this key frame. "
+            "If it is a technical architecture slide or diagram, explain the components, system design, and data flow. "
+            "If it is a physical demonstration, recipe, or real-world subject, describe what is shown, the technique or ingredients/elements, and how it is visually presented."
         )
         diagram_analysis = query_ollama(diag_prompt, model=model, images_b64=[b64])
 
-    # 3. Comprehensive synthesis combining transcript + metadata
-    print("[*] Generating comprehensive technical synthesis & critique...")
+    # 3. Comprehensive synthesis combining transcript + metadata + visual domain
+    print("[*] Generating comprehensive content synthesis & critique...")
     meta_summary = (
-        f"Creator: @{metadata.get('username')}, Followers: {metadata.get('followers')}, "
+        f"Platform: {metadata.get('platform', 'Short-form')}, Title/Caption: {caption}, "
+        f"Creator: @{username}, Followers: {metadata.get('followers')}, "
         f"Duration: {metadata.get('video_duration_seconds')}s, Comments: {metadata.get('comment_count')}"
     )
     synthesis_prompt = f"""
-You are an expert AI Systems Architect reviewing a viral tech video.
+You are an expert media, content, and subject-matter analyst reviewing a viral short-form video (Instagram Reel or YouTube Short).
 
 POST CONTEXT:
 {meta_summary}
@@ -84,12 +88,11 @@ POST CONTEXT:
 VERBATIM TRANSCRIPT:
 \"\"\"{transcript}\"\"\"
 
-Please provide a detailed, well-structured breakdown:
-1. Executive Summary (Concise overview of the reel's core narrative)
-2. The Engineering Problem (Detail the computational bottleneck, mathematics, and limitations mentioned)
-3. The Proposed System Architecture (Explain the specific solutions proposed and how they work)
-4. Critical Engineering Reality Check (Critique the feasibility, realistic implementation hurdles, and whether this is a sound interview answer)
-5. Audience & Viral Mechanics (Why this video works well on social media)
+Please provide an in-depth, structured breakdown tailored to the actual subject of the video (whether it is technical, culinary, lifestyle, or educational):
+1. Executive Summary: Concise overview of what this video is actually about, its central message, and creator approach.
+2. Core Subject Breakdown: Explain the core concepts, techniques, or demonstration shown (e.g. system architecture if tech, ingredients/methods if cooking, practical tips if educational).
+3. Soundness & Quality Assessment: Evaluate the accuracy, practicality, and real-world feasibility of what was presented.
+4. Audience & Viral Mechanics: Explain why this content engages viewers (hook-hold-payoff structure, audio choice, on-screen text, relatability, and discussion triggers).
 """
     synthesis = query_ollama(synthesis_prompt, model=model)
     
